@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORGE: Fine-Tuning Over Reward Generations through Evolution</title>
+<meta name="description" content="FORGE reframes LLM-driven reward search around the upstream-downstream factorization of modern RL: a one-time task-agnostic skill prior plus ordered reward-policy co-evolution.">
+<meta property="og:title" content="FORGE: Fine-Tuning Over Reward Generations through Evolution">
+<meta property="og:description" content="Restoring the upstream-downstream factorization of modern RL for LLM reward search.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- MathJax -->
+<script>
+window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] }, svg: { fontCache: 'global' } };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root{
+    --ink:#1a1a1a;
+    --muted:#5a5f66;
+    --faint:#8a9099;
+    --line:#e6e8eb;
+    --bg:#ffffff;
+    --soft:#f7f8fa;
+    --accent:#2f3b8c;       /* deep indigo, matches the G logo */
+    --accent-soft:#eef0f9;
+    --maxw:880px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Newsreader", Georgia, "Times New Roman", serif;
+    font-size:19px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;}
+
+  /* ---------- Header ---------- */
+  header.hero{
+    padding:74px 0 30px;
+    border-bottom:1px solid var(--line);
+    text-align:center;
+  }
+  .badge{
+    display:inline-block;
+    font-family:"Inter",sans-serif;
+    font-size:12.5px;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+    color:var(--accent);
+    background:var(--accent-soft);
+    border-radius:999px;
+    padding:5px 14px;
+    margin-bottom:22px;
+    font-weight:600;
+  }
+  h1.title{
+    font-size:clamp(30px,4.6vw,46px);
+    line-height:1.12;
+    font-weight:600;
+    margin:0 0 18px;
+    letter-spacing:-.01em;
+  }
+  h1.title .small{display:block;font-size:.52em;color:var(--muted);font-weight:400;margin-top:10px;font-style:italic;}
+  .authors{font-family:"Inter",sans-serif;font-size:16px;color:var(--ink);margin:6px 0 4px;font-weight:500;}
+  .affil{font-family:"Inter",sans-serif;font-size:14.5px;color:var(--muted);margin:0 0 6px;}
+  .venue{font-family:"Inter",sans-serif;font-size:14px;color:var(--faint);margin:8px 0 0;}
+
+  /* ---------- Link buttons ---------- */
+  .links{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+    margin:28px 0 4px;
+  }
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:"Inter",sans-serif;font-size:14.5px;font-weight:500;
+    text-decoration:none;color:#fff;background:var(--ink);
+    padding:9px 18px;border-radius:8px;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .btn:hover{transform:translateY(-2px);background:var(--accent);}
+  .btn svg{width:16px;height:16px;fill:currentColor;}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
+  .btn.ghost:hover{background:var(--soft);color:var(--accent);border-color:var(--accent);}
+
+  /* ---------- Sections ---------- */
+  section{padding:46px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{
+    font-family:"Inter",sans-serif;
+    font-size:14px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;
+    margin:0 0 20px;
+  }
+  h3{font-size:22px;font-weight:600;margin:30px 0 8px;}
+  p{margin:0 0 18px;}
+  a{color:var(--accent);}
+  .lead{font-size:21px;line-height:1.6;}
+  .muted{color:var(--muted);}
+
+  /* abstract emphasis */
+  .abstract p{font-size:19.5px;}
+  .pull{
+    border-left:3px solid var(--accent);
+    padding:2px 0 2px 20px;margin:26px 0;
+    font-style:italic;color:var(--ink);
+    font-size:20px;line-height:1.5;
+  }
+
+  /* ---------- Figures ---------- */
+  figure{margin:30px 0;text-align:center;}
+  figure img{
+    max-width:100%;height:auto;
+    border:1px solid var(--line);border-radius:10px;
+    background:#fff;padding:10px;
+  }
+  figure.bare img{border:none;padding:0;}
+  figcaption{
+    font-family:"Inter",sans-serif;font-size:14px;line-height:1.55;
+    color:var(--muted);margin-top:14px;max-width:760px;
+    margin-left:auto;margin-right:auto;text-align:left;
+  }
+  figcaption b{color:var(--ink);}
+
+  /* ---------- Contribution cards ---------- */
+  .cards{display:grid;grid-template-columns:1fr;gap:14px;margin-top:8px;}
+  @media(min-width:680px){.cards{grid-template-columns:repeat(3,1fr);}}
+  .card{
+    border:1px solid var(--line);border-radius:12px;padding:22px 20px;
+    background:var(--soft);
+  }
+  .card .num{
+    font-family:"Inter",sans-serif;font-weight:700;font-size:13px;
+    color:var(--accent);letter-spacing:.05em;
+  }
+  .card h4{font-size:18px;margin:8px 0 8px;font-weight:600;line-height:1.25;}
+  .card p{font-family:"Inter",sans-serif;font-size:14.5px;line-height:1.55;color:var(--muted);margin:0;}
+
+  /* ---------- Results table ---------- */
+  .tablewrap{overflow-x:auto;margin:24px 0;}
+  table{
+    border-collapse:collapse;width:100%;
+    font-family:"Inter",sans-serif;font-size:15px;
+  }
+  caption{caption-side:top;text-align:left;font-family:"Inter",sans-serif;font-size:14px;color:var(--muted);margin-bottom:12px;}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);}
+  thead th{font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);border-bottom:2px solid var(--line);}
+  tbody tr.highlight{background:var(--accent-soft);}
+  tbody tr.highlight td{font-weight:600;color:var(--ink);}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+
+  /* key numbers strip */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:8px 0 4px;}
+  @media(max-width:560px){.stats{grid-template-columns:1fr;}}
+  .stat{text-align:center;padding:24px 12px;border:1px solid var(--line);border-radius:12px;}
+  .stat .big{font-size:38px;font-weight:600;color:var(--accent);line-height:1;font-family:"Newsreader",serif;}
+  .stat .lbl{font-family:"Inter",sans-serif;font-size:13.5px;color:var(--muted);margin-top:10px;line-height:1.4;}
+
+  /* ---------- BibTeX ---------- */
+  pre.bib{
+    background:#1c2030;color:#e8eaf0;border-radius:10px;
+    padding:20px 22px;overflow-x:auto;
+    font-family:"JetBrains Mono",monospace;font-size:13.5px;line-height:1.6;
+    margin:0;
+  }
+  .bibhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .copybtn{
+    font-family:"Inter",sans-serif;font-size:13px;cursor:pointer;
+    border:1px solid var(--line);background:#fff;color:var(--muted);
+    border-radius:7px;padding:6px 12px;transition:all .12s ease;
+  }
+  .copybtn:hover{border-color:var(--accent);color:var(--accent);}
+
+  footer{padding:40px 0 60px;text-align:center;font-family:"Inter",sans-serif;font-size:13.5px;color:var(--faint);}
+  footer a{color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="badge">NeurIPS 2026 · Under Review</span>
+    <h1 class="title">FORGE
+      <span class="small">Fine-Tuning Over Reward Generations through Evolution</span>
+    </h1>
+    <p class="authors">Anonymous Author(s)</p>
+    <p class="affil">Affiliation withheld for double-blind review</p>
+    <p class="venue">40th Conference on Neural Information Processing Systems (NeurIPS 2026)</p>
+
+    <div class="links">
+      <a class="btn" href="paper.pdf">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm0 2 4 4h-4V4zM8 13h8v2H8v-2zm0 4h8v2H8v-2z"/></svg>
+        Paper (PDF)
+      </a>
+      <a class="btn ghost" href="#">
+        <svg viewBox="0 0 24 24"><path d="M12 2 1 7l11 5 9-4.09V14h2V7L12 2zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+        arXiv
+      </a>
+      <a class="btn ghost" href="#">
+        <svg viewBox="0 0 24 24"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.8 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.5-1.5 7.8-5.8 7.8-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+        Code
+      </a>
+      <a class="btn ghost" href="#bibtex">
+        <svg viewBox="0 0 24 24"><path d="M9 7h6v2H9V7zm0 4h6v2H9v-2zm0 4h4v2H9v-2zM5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm0 2v14h14V5H5z"/></svg>
+        BibTeX
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ABSTRACT -->
+  <section class="abstract">
+    <h2>Abstract</h2>
+    <p class="lead">Designing effective reward functions is a persistent bottleneck in reinforcement learning. Recent work uses large language models to generate task-specific rewards and evolve them against a task-level fitness function. But state-of-the-art LLM-driven reward search trains and discards a fresh policy for <em>each</em> reward candidate, skipping the upstream&ndash;downstream factorization of modern RL: policy initialization is incidental, and reward ordering is ignored.</p>
+    <p>We hypothesize that restoring this factorization &mdash; pretraining a task-agnostic skill prior once, then letting the <em>ordered reward trajectory</em> itself carry the specification &mdash; yields stronger policies at a fraction of the compute. We introduce <strong>FORGE</strong> (<strong>F</strong>ine-tuning <strong>O</strong>ver <strong>R</strong>eward <strong>G</strong>enerations through <strong>E</strong>volution), which pretrains a skill prior via temporal-distance successor features and then lets an LLM evolve task rewards while each policy adapts through closed-form skill projection.</p>
+    <div class="pull">On locomotion and balance, FORGE surpasses the prior state of the art in fully automated LLM reward search at 10&times; less compute per reward candidate. On dexterous manipulation, augmenting pretraining with only 100 expert episodes lets FORGE reach 89.1% of the published human-in-the-loop state of the art.</div>
+  </section>
+
+  <!-- TEASER / PIPELINE -->
+  <section>
+    <h2>The FORGE pipeline</h2>
+    <p>FORGE couples a one-time upstream skill prior with downstream reward&ndash;policy co-evolution. Each generation, an LLM reward designer&nbsp;$G$ proposes an executable reward from a natural-language task description, the simulator's observation and action variables, policy rollouts, and fitness scores. FORGE infers a skill vector in closed form, $z^\star=(\Phi^\top\Phi)^{-1}\Phi^\top r$, and fine-tunes a child policy inherited from its parent rather than restarting from scratch.</p>
+    <figure class="bare">
+      <img src="assets/figures/fig1_pipeline_v3.png" alt="FORGE pipeline diagram: a task-agnostic skill prior is pretrained once, then each LLM-generated reward is projected into skill space and a child policy is fine-tuned from its parent checkpoint.">
+      <figcaption><b>Figure 1 &mdash; FORGE pipeline.</b> Given a task and its environment variables (humanoid locomotion shown), a task-agnostic skill prior $(\phi,\pi_0,\mathcal{B}_{\text{off}})$ is pretrained once. Each generation, the LLM proposes a reward; FORGE infers $z^\star=(\Phi^\top\Phi)^{-1}\Phi^\top r$ in closed form and fine-tunes a child policy inherited from its parent. Fitness scores the ordered reward&ndash;policy trajectory.</figcaption>
+    </figure>
+  </section>
+
+  <!-- WHY / KEY IDEA -->
+  <section>
+    <h2>Why it matters</h2>
+    <p>LLM-based methods recast reward design as program search: an LLM proposes executable reward functions, each is used to train a policy, and the resulting behavior is scored by a fitness function. The limitation is that this fitness remains <em>static</em> while the search is <em>sequential</em> &mdash; every candidate is evaluated from a fresh policy initialization and the checkpoint is discarded after scoring. The score therefore measures standalone reward quality, asking whether a reward trains a good policy in isolation rather than whether it advances the policy state produced by previous rewards.</p>
+    <p>FORGE redefines reward fitness around trajectory-relative progress. Instead of searching for a single best standalone reward, it optimizes an ordered reward trajectory $(R^0, R^1, \ldots)$ where each generation specializes an inherited policy. This makes the starting policy and its representation load-bearing: downstream reward evolution should specialize reusable capabilities, not rediscover low-level embodiment behavior.</p>
+
+    <div class="cards">
+      <div class="card">
+        <div class="num">CONTRIBUTION 1</div>
+        <h4>A reusable prior guides generational policy evolution</h4>
+        <p>A task-agnostic skill prior provides reusable behavioral structure, letting each generation inherit useful capabilities instead of relearning low-level skills. Pretraining becomes a one-time cost amortized across downstream tasks on the same embodiment.</p>
+      </div>
+      <div class="card">
+        <div class="num">CONTRIBUTION 2</div>
+        <h4>Expert demos restore missing success capabilities</h4>
+        <p>When unsupervised pretraining never reaches success states, a one-time set of expert demonstrations supplies the missing capability &mdash; intervening at the <em>capability level</em> rather than relying on signal-level feedback every generation.</p>
+      </div>
+      <div class="card">
+        <div class="num">CONTRIBUTION 3</div>
+        <h4>Trajectory-level fitness captures cumulative improvement</h4>
+        <p>Rather than treating each reward as an independent RL problem, FORGE judges each generation by whether it advances the cumulative capabilities inherited from its predecessors along the reward&ndash;policy trajectory.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- METHOD -->
+  <section>
+    <h2>Method</h2>
+    <h3>Task-agnostic skill prior</h3>
+    <p>FORGE begins with a one-time pretraining phase producing a skill prior $(\phi,\pi_0,\mathcal{B}_{\text{off}})$ shared across downstream tasks on the same embodiment. The feature map $\phi:\mathcal{S}\to\mathbb{R}^d$ is trained with HILP temporal-distance learning to capture reward-agnostic state-space geometry, while $\pi_0(a\mid s,z)$ and a successor-feature network $\psi^\pi$ are trained on the same offline buffer. For any reward linear in the learned feature space, $R_z(s)=\phi(s)^\top z$, the action-value estimate factorizes as $Q^\pi(s,a;z)=\psi^\pi(s,a;z)^\top z$.</p>
+
+    <h3>Closed-form reward-to-skill adaptation</h3>
+    <p>Before fine-tuning a child policy, FORGE maps each LLM-generated reward into the pretrained skill space. Given a reward candidate $R$, it relabels transitions from the offline buffer to obtain reward values $r_i=R(s_i,a_i)$, and infers the skill direction by solving the least-squares projection</p>
+    <p style="text-align:center;">$z^\star=\arg\min_z \lVert \Phi z - r\rVert_2^2 = (\Phi^\top\Phi)^{-1}\Phi^\top r.$</p>
+    <p>This inferred vector $z^\star$ initializes the skill input of the child policy before online fine-tuning, giving the inherited policy a reward-directed initialization in the pretrained skill space &mdash; with any residual approximation error corrected by subsequent online fine-tuning under $R$.</p>
+
+    <h3>Cross-generation policy inheritance</h3>
+    <p>FORGE evaluates reward candidates through inherited policies rather than freshly initialized ones. Each child reward is paired with a parent checkpoint, warmstarted with the reward-specific skill vector $z^\star$, then fine-tuned under that reward. Because fitness is computed from a parent checkpoint, it is <em>lineage-dependent</em>: it reflects how a reward improves the inherited policy state, not how it performs under fresh training. FORGE <b>(island)</b> follows REvolve's island-based parent selection; FORGE <b>(elite)</b> follows Eureka's single-population design.</p>
+  </section>
+
+  <!-- RESULTS -->
+  <section>
+    <h2>Results</h2>
+    <p>FORGE is evaluated on three MuJoCo environments &mdash; Humanoid Locomotion, Humanoid Standup, and Adroit Hand &mdash; chosen because they differ in how much unsupervised pretraining covers downstream success states. The reward designer is Qwen3-Coder (480B-A35B-Instruct).</p>
+
+    <div class="stats">
+      <div class="stat"><div class="big">10&times;</div><div class="lbl">less compute per reward candidate vs. REvolve-auto on Humanoid tasks</div></div>
+      <div class="stat"><div class="big">89.1%</div><div class="lbl">of REvolve's published human-in-the-loop peak on Adroit Hand, fully automated</div></div>
+      <div class="stat"><div class="big">100</div><div class="lbl">expert episodes are enough to inject the missing door-opening capability</div></div>
+    </div>
+
+    <h3>Compute-efficient reward search</h3>
+    <figure>
+      <img src="assets/figures/fig2_results.png" alt="Best fitness versus generation on the three tasks: FORGE (island) exceeds REvolve-auto on Humanoid Locomotion and Standup; FORGE (elite) collapses under global-best inheritance.">
+      <figcaption><b>Figure 2 &mdash; Compute-efficient reward search.</b> Cumulative best fitness vs. generation. FORGE (island) exceeds REvolve-auto on Humanoid Locomotion and Standup at 10&times; less per-individual compute. FORGE (elite) collapses under global-best inheritance. Solid: observed; dashed: projected plateau. Shaded: std across seeds.</figcaption>
+    </figure>
+
+    <h3>When expert injection helps &mdash; and when it hurts</h3>
+    <figure>
+      <img src="assets/figures/fig3_expert.png" alt="Best fitness versus generation under three buffers (RND-only, expert-only, RND+hybrid) showing that expert injection rescues Adroit Hand but harms the Humanoid tasks.">
+      <figcaption><b>Figure 3 &mdash; Expert injection rescues or harms depending on the binding constraint.</b> Cumulative best fitness vs. generation under three buffers: RND-only (blue), expert-only (orange), and RND + 100-episode hybrid (red). Adroit Hand uses 100 door-expert episodes; the Humanoid tasks use 100 episodes from converged RND-only FORGE policies. Shaded: std across seeds.</figcaption>
+    </figure>
+
+    <figure style="max-width:520px;margin-left:auto;margin-right:auto;">
+      <img src="assets/figures/fig4_ceiling.png" alt="Capability-ceiling check on Adroit Hand: pretraining on the full 5000-episode door-expert dataset reaches 0.78 at generation 0 and saturates at 0.84, near REvolve's 0.875.">
+      <figcaption><b>Figure 4 &mdash; Capability-ceiling check.</b> The upper bound when expert data is unconstrained: pretraining $\pi_0$ on the full 5000-episode door-expert dataset reaches 0.78 at gen-0 and saturates at 0.84 by gen-1, approaching REvolve's published 0.875.</figcaption>
+    </figure>
+
+    <h3>Both the skill prior and inheritance are required</h3>
+    <figure>
+      <img src="assets/figures/fig5_ablation.png" alt="Ablation: removing the pretrained feature map (inherit-only) or cross-generation inheritance (skill-prior-only) underperforms the full system on Humanoid tasks; all variants stagnate on Adroit Hand.">
+      <figcaption><b>Figure 5 &mdash; Both the skill prior and cross-generation inheritance are required.</b> Removing pretrained $\phi$ (Inherit only) or cross-generation inheritance (Skill prior only) underperforms the full system on the Humanoid tasks; all variants stagnate on the capability-limited Adroit Hand.</figcaption>
+    </figure>
+
+    <h3>No single best reward matches the co-evolved peak</h3>
+    <div class="tablewrap">
+      <table>
+        <caption>Table 2 &mdash; FORGE co-evolved fitness (top, bold; mean&plusmn;std, 5 seeds) vs. retraining the single best discovered reward at three compute budgets. $\Delta$ from FORGE; negative = worse. No single-reward retraining matches the co-evolved peak.</caption>
+        <thead>
+          <tr>
+            <th>Configuration</th><th>Init</th><th class="num">Compute</th>
+            <th class="num">Locomotion</th><th class="num">Standup</th><th class="num">Adroit&nbsp;Hand</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="highlight">
+            <td>FORGE</td><td>Pretrained $\pi_0$</td><td class="num">57M</td>
+            <td class="num">5.1&nbsp;&plusmn;&nbsp;0.3</td><td class="num">0.80&nbsp;&plusmn;&nbsp;0.05</td><td class="num">0.78&nbsp;&plusmn;&nbsp;0.05</td>
+          </tr>
+          <tr><td>Best reward</td><td>Pretrained $\pi_0$</td><td class="num">0.5M</td><td class="num">&minus;0.8</td><td class="num">&minus;0.26</td><td class="num">&minus;0.28</td></tr>
+          <tr><td>Best reward</td><td>Pretrained $\pi_0$</td><td class="num">3.5M</td><td class="num">&minus;0.5</td><td class="num">&minus;0.20</td><td class="num">&minus;0.23</td></tr>
+          <tr><td>Best reward</td><td>Random $\theta_0$</td><td class="num">5M</td><td class="num">&minus;0.6</td><td class="num">&minus;0.18</td><td class="num">&minus;0.13</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:16px;">The reward that performs best within a lineage does not generalize beyond it: under trajectory-level fitness, a reward is selected because it advances an inherited policy, not because it is the best standalone training signal.</p>
+  </section>
+
+  <!-- TAKEAWAYS -->
+  <section>
+    <h2>Takeaways</h2>
+    <p>FORGE reframes LLM-driven reward search around the upstream&ndash;downstream factorization of modern RL. A one-time task-agnostic skill prior is pretrained on the embodiment alone, and a downstream evolutionary loop projects each LLM-generated reward into the prior's skill space and inherits policy weights across generations. FORGE replaces from-scratch policy training on every reward candidate with closed-form skill projection followed by skill-conditioned fine-tuning &mdash; showing that ordered reward <em>trajectories</em>, not single best rewards, are the load-bearing object of evolutionary reward search.</p>
+    <p class="muted" style="font-size:16px;">Limitations: FORGE assumes a fixed embodiment whose pretrained $\phi$ covers task-relevant states; cross-embodiment transfer is out of scope. Expert injection is task-dependent &mdash; it rescues capability-limited tasks but can degrade tasks where unsupervised pretraining already supplies both capability and diversity. Run-to-run variance is higher than from-scratch evolution because LLM-reward stochasticity compounds with inherited-policy drift across generations.</p>
+  </section>
+
+  <!-- BIBTEX -->
+  <section id="bibtex">
+    <h2>BibTeX</h2>
+    <div class="bibhead">
+      <span class="muted" style="font-family:'Inter',sans-serif;font-size:14px;">Citation (update once de-anonymized)</span>
+      <button class="copybtn" onclick="copyBib()">Copy</button>
+    </div>
+    <pre class="bib" id="bibtext">@inproceedings{forge2026,
+  title     = {FORGE: Fine-Tuning Over Reward Generations through Evolution},
+  author    = {Anonymous Author(s)},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2026},
+  note      = {Under review}
+}</pre>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>FORGE project page &middot; Submitted to NeurIPS 2026 &middot; Do not distribute.<br>
+    Built for GitHub Pages. Replace the <code>#</code> link placeholders with your arXiv and code URLs.</p>
+  </div>
+</footer>
+
+<script>
+function copyBib(){
+  const t = document.getElementById('bibtext').innerText;
+  navigator.clipboard.writeText(t).then(()=>{
+    const b=document.querySelector('.copybtn');
+    const o=b.innerText; b.innerText='Copied!';
+    setTimeout(()=>b.innerText=o,1400);
+  });
+}
+</script>
+</body>
+</html>
