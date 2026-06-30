@@ -1,39 +1,45 @@
-# FORGE — Project Page
+# FORGE: Fine-Tuning Over Reward Generations through Evolution
 
-Static project page for **FORGE: Fine-Tuning Over Reward Generations through Evolution**, ready to deploy on GitHub Pages.
+Project page for **FORGE**, a method that reframes LLM-driven reward search around the upstream–downstream factorization of modern reinforcement learning.
 
-## Files
+🌐 **Live page:** https://linqizhe07.github.io/forge/
+📄 **Paper:** [paper.pdf](paper.pdf)
+
+## TL;DR
+
+State-of-the-art LLM reward search trains and **discards** a fresh policy for *every* reward candidate — ignoring policy initialization and reward ordering. FORGE restores that factorization: it pretrains a **task-agnostic skill prior once**, then lets an LLM evolve task rewards while each policy adapts through **closed-form skill projection** and inherits weights across generations. Fitness is measured over the *ordered reward–policy trajectory* rather than each reward in isolation.
+
+## Highlights
+
+- **10× less compute** per reward candidate than the prior automated state of the art, while exceeding it on Humanoid Locomotion and Standup.
+- **89.1%** of REvolve's published human-in-the-loop peak on Adroit Hand — fully automated, no per-generation human feedback.
+- Just **100 expert episodes** at pretraining inject the missing capability when unsupervised exploration never reaches success states.
+
+## How it works
+
+1. **Task-agnostic skill prior** — a feature map `φ`, prior policy `π₀`, and offline buffer are pretrained once per embodiment via temporal-distance successor features.
+2. **Closed-form reward-to-skill projection** — each LLM-generated reward `R` is mapped to a skill vector `z* = (ΦᵀΦ)⁻¹Φᵀr`, giving the child policy a reward-directed initialization.
+3. **Cross-generation inheritance** — each child fine-tunes from its parent checkpoint instead of restarting, so fitness reflects cumulative progress along the reward trajectory.
+
+## Repository contents
 
 ```
-site/
-├── index.html          # the page (single file, no build step)
-├── paper.pdf           # the paper, linked from the "Paper (PDF)" button
-├── .nojekyll           # tells GitHub Pages to serve files as-is
-└── assets/figures/     # figures extracted from the PDF
+.
+├── index.html          # the project page
+├── paper.pdf           # full paper
+└── assets/figures/     # figures (pipeline, results, ablations)
 ```
 
-## Deploy on GitHub Pages
+## Citation
 
-1. Create a repo and push the **contents of this `site/` folder** to the root of a branch (e.g. `main`).
-   - For a user/org site, name the repo `<username>.github.io`.
-   - For a project site, any repo name works; the page will live at `https://<username>.github.io/<repo>/`.
-2. In the repo: **Settings → Pages → Build and deployment**.
-3. Set **Source = Deploy from a branch**, pick your branch and the `/ (root)` folder, then **Save**.
-4. Wait ~1 minute, then open the URL shown on that settings page.
-
-```bash
-git init
-git add .
-git commit -m "FORGE project page"
-git branch -M main
-git remote add origin https://github.com/<username>/<repo>.git
-git push -u origin main
+```bibtex
+@inproceedings{forge2026,
+  title     = {FORGE: Fine-Tuning Over Reward Generations through Evolution},
+  author    = {Anonymous Author(s)},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2026},
+  note      = {Under review}
+}
 ```
 
-## Before publishing
-
-- Replace the `#` placeholders in `index.html` for the **arXiv** and **Code** buttons with real URLs.
-- Update the **BibTeX** block once the paper is de-anonymized.
-- Author/affiliation are intentionally left anonymous for double-blind review.
-
-The page uses only CDN resources (Google Fonts + MathJax), so no build tooling is required.
+> Author and affiliation are intentionally anonymous for double-blind review. Update this section and the `#` link placeholders in `index.html` (arXiv, Code) once de-anonymized.
