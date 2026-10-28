@@ -186,24 +186,20 @@ window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] 
 
 <header class="hero">
   <div class="wrap">
-    <span class="badge">NeurIPS 2026 · Under Review</span>
+    <span class="badge">Preprint &middot; 2026</span>
     <h1 class="title">FORGE
       <span class="small">Fine-Tuning Over Reward Generations through Evolution</span>
     </h1>
-    <p class="authors">Anonymous Author(s)</p>
-    <p class="affil">Affiliation withheld for double-blind review</p>
-    <p class="venue">40th Conference on Neural Information Processing Systems (NeurIPS 2026)</p>
+    <p class="authors">Linqi Zhe</p>
+    <p class="affil">GRASP Laboratory, University of Pennsylvania</p>
+    <p class="venue"><a href="mailto:linqizhe@seas.upenn.edu">linqizhe@seas.upenn.edu</a> &middot; <a href="https://github.com/linqizhe07">github.com/linqizhe07</a></p>
 
     <div class="links">
       <a class="btn" href="paper.pdf">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm0 2 4 4h-4V4zM8 13h8v2H8v-2zm0 4h8v2H8v-2z"/></svg>
         Paper (PDF)
       </a>
-      <a class="btn ghost" href="#">
-        <svg viewBox="0 0 24 24"><path d="M12 2 1 7l11 5 9-4.09V14h2V7L12 2zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
-        arXiv
-      </a>
-      <a class="btn ghost" href="#">
+      <a class="btn ghost" href="https://github.com/linqizhe07/zeroshotRevolve">
         <svg viewBox="0 0 24 24"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.8 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.5-1.5 7.8-5.8 7.8-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
         Code
       </a>
@@ -220,9 +216,10 @@ window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] 
   <!-- ABSTRACT -->
   <section class="abstract">
     <h2>Abstract</h2>
-    <p class="lead">Designing effective reward functions is a persistent bottleneck in reinforcement learning. Recent work uses large language models to generate task-specific rewards and evolve them against a task-level fitness function. But state-of-the-art LLM-driven reward search trains and discards a fresh policy for <em>each</em> reward candidate, skipping the upstream&ndash;downstream factorization of modern RL: policy initialization is incidental, and reward ordering is ignored.</p>
+    <p class="lead">Designing effective reward functions is a persistent bottleneck in reinforcement learning. Recent work uses large language models to generate task-specific rewards and evolve them against a task-level fitness function. But state-of-the-art LLM-driven reward search trains and discards a policy for <em>each</em> reward candidate, skipping the upstream&ndash;downstream factorization of modern RL: policy initialization is incidental, and reward ordering is ignored.</p>
     <p>We hypothesize that restoring this factorization &mdash; pretraining a task-agnostic skill prior once, then letting the <em>ordered reward trajectory</em> itself carry the specification &mdash; yields stronger policies at a fraction of the compute. We introduce <strong>FORGE</strong> (<strong>F</strong>ine-tuning <strong>O</strong>ver <strong>R</strong>eward <strong>G</strong>enerations through <strong>E</strong>volution), which pretrains a skill prior via temporal-distance successor features and then lets an LLM evolve task rewards while each policy adapts through closed-form skill projection.</p>
-    <div class="pull">On locomotion and balance, FORGE surpasses the prior state of the art in fully automated LLM reward search at 10&times; less compute per reward candidate. On dexterous manipulation, augmenting pretraining with only 100 expert episodes lets FORGE reach 89.1% of the published human-in-the-loop state of the art.</div>
+    <div class="pull">On locomotion and balance, FORGE surpasses the previous state of the art in fully automated LLM reward search at 10&times; less compute per reward candidate. On dexterous manipulation, performance is threshold-like in the <em>precursor-state</em> coverage of the pretraining buffer: from an unsupervised exploration buffer containing no success states at all, FORGE reaches 0.88 fitness with zero demonstrations and zero per-generation human feedback, surpassing the published human-in-the-loop state of the art (0.875).</div>
+    <p>This dependence motivates <em>coverage bootstrapping</em>: a rescue loop that writes the evolving policy's frontier back into the pretraining buffer and re-pretrains the prior, so that each generation's capability becomes the next generation's coverage.</p>
   </section>
 
   <!-- TEASER / PIPELINE -->
@@ -249,8 +246,8 @@ window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] 
       </div>
       <div class="card">
         <div class="num">CONTRIBUTION 2</div>
-        <h4>Expert demos restore missing success capabilities</h4>
-        <p>When unsupervised pretraining never reaches success states, a one-time set of expert demonstrations supplies the missing capability &mdash; intervening at the <em>capability level</em> rather than relying on signal-level feedback every generation.</p>
+        <h4>Self-generated coverage repair</h4>
+        <p>The pretraining buffer defines the world the prior can represent; evolution pushes the policy's frontier beyond it. When a generation fails, FORGE harvests frontier transitions from accepted-lineage checkpoints, writes them back into the offline buffer, and re-pretrains the prior under an anchoring objective &mdash; an intervention at the <em>capability level</em> that consumes only the system's own rollouts.</p>
       </div>
       <div class="card">
         <div class="num">CONTRIBUTION 3</div>
@@ -273,46 +270,47 @@ window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] 
 
     <h3>Cross-generation policy inheritance</h3>
     <p>FORGE evaluates reward candidates through inherited policies rather than freshly initialized ones. Each child reward is paired with a parent checkpoint, warmstarted with the reward-specific skill vector $z^\star$, then fine-tuned under that reward. Because fitness is computed from a parent checkpoint, it is <em>lineage-dependent</em>: it reflects how a reward improves the inherited policy state, not how it performs under fresh training. FORGE <b>(island)</b> follows REvolve's island-based parent selection; FORGE <b>(elite)</b> follows Eureka's single-population design.</p>
+
+    <h3>Coverage bootstrapping</h3>
+    <p>Required coverage is unknown a priori and collection scales linearly, so some tasks sit below the threshold at any practical budget. FORGE is designed to repair coverage at runtime: a generation whose best fitness falls below its parent generation's, or scores all zero, is discarded; surviving parent checkpoints run <em>policy-prefix-then-random</em> exploration to manufacture task-adjacent states; harvested transitions merge into the offline buffer and the $z^\star$ regression, with $\phi$ refreshed by anchored continue-training (70% original, 30% harvested) so inherited checkpoints stay valid. Same-parent retries are bounded, the best attempt is force-accepted, and the accepted lineage never regresses.</p>
   </section>
 
   <!-- RESULTS -->
   <section>
     <h2>Results</h2>
-    <p>FORGE is evaluated on three MuJoCo environments &mdash; Humanoid Locomotion, Humanoid Standup, and Adroit Hand &mdash; chosen because they differ in how much unsupervised pretraining covers downstream success states. The reward designer is Qwen3-Coder (480B-A35B-Instruct).</p>
+    <p>FORGE is evaluated on three MuJoCo environments &mdash; Humanoid Locomotion, Humanoid Standup, and Adroit Hand &mdash; chosen because they differ in whether unsupervised pretraining reaches downstream success states. On the Humanoid tasks, RND rollouts already visit success states during pretraining; on Adroit Hand, upstream exploration never observes a single success, so the prior must work from precursor states alone. The reward designer is Qwen3-Coder (480B-A35B-Instruct).</p>
 
     <div class="stats">
-      <div class="stat"><div class="big">10&times;</div><div class="lbl">less compute per reward candidate vs. REvolve-auto on Humanoid tasks</div></div>
-      <div class="stat"><div class="big">89.1%</div><div class="lbl">of REvolve's published human-in-the-loop peak on Adroit Hand, fully automated</div></div>
-      <div class="stat"><div class="big">100</div><div class="lbl">expert episodes are enough to inject the missing door-opening capability</div></div>
+      <div class="stat"><div class="big">10&times;</div><div class="lbl">less compute per reward candidate than REvolve-auto, while exceeding it on all three tasks</div></div>
+      <div class="stat"><div class="big">0.88</div><div class="lbl">fitness on Adroit Hand door opening with zero demonstrations, above the 0.875 human-in-the-loop peak</div></div>
+      <div class="stat"><div class="big">0</div><div class="lbl">success states in the 30K-episode pretraining buffer: the prior works from precursor states alone</div></div>
     </div>
 
     <h3>Compute-efficient reward search</h3>
+    <p>Cross-generation inheritance lets the population reuse capabilities accumulated under previous rewards, but only when multiple viable lineages are preserved. FORGE (elite) inherits from a single globally fittest checkpoint and collapses with high variance; FORGE (island) keeps island-local lineages and exceeds REvolve-auto on all three tasks while using 10&times; fewer environment interactions per individual. Including the one-time pretraining, FORGE uses 57M environment interactions in total versus 560M for REvolve-auto.</p>
     <figure>
-      <img src="assets/figures/fig2_results.png" alt="Best fitness versus generation on the three tasks: FORGE (island) exceeds REvolve-auto on Humanoid Locomotion and Standup; FORGE (elite) collapses under global-best inheritance.">
-      <figcaption><b>Figure 2 &mdash; Compute-efficient reward search.</b> Cumulative best fitness vs. generation. FORGE (island) exceeds REvolve-auto on Humanoid Locomotion and Standup at 10&times; less per-individual compute. FORGE (elite) collapses under global-best inheritance. Solid: observed; dashed: projected plateau. Shaded: std across seeds.</figcaption>
+      <img src="assets/figures/fig2_fitness.png" alt="Cumulative best fitness versus generation on Humanoid Locomotion, Humanoid Standup and Adroit Hand: FORGE (island) exceeds REvolve-auto on all three tasks; FORGE (elite) collapses under global-best inheritance.">
+      <figcaption><b>Figure 2 &mdash; Compute-efficient reward search.</b> Cumulative best fitness vs. generation. FORGE (island) exceeds REvolve-auto on all three tasks at 10&times; less per-individual compute; FORGE (elite) collapses under global-best inheritance. Solid: observed; dashed: projected plateau. Shaded: std across seeds (Adroit Hand FORGE (island): single run, no band).</figcaption>
     </figure>
 
-    <h3>When expert injection helps &mdash; and when it hurts</h3>
+    <h3>A coverage threshold, not a demonstration requirement</h3>
+    <p>Adroit Hand exposes a boundary condition: FORGE is acutely sensitive to pretraining-buffer <em>size</em>. A 10K-episode RND buffer's door-hinge tail stops at 0.45&nbsp;rad with zero successes, and evolution locks near the random baseline (&asymp;0.2). Tripling to 30K still yields <em>zero</em> successful episodes &mdash; deepest excursion 0.92&nbsp;rad, below the 1.35&nbsp;rad success threshold &mdash; yet the partial-contact tail (&sim;4&times;10<sup>&minus;4</sup> of transitions past 0.2&nbsp;rad) suffices: FORGE lifts off at 0.54 at generation 0 and converges to 0.88 by generation 1, surpassing REvolve's published human-in-the-loop peak (0.875) with zero demonstrations and zero per-generation human feedback. The dependence is threshold-like in <em>precursor</em>-state, not success-state, coverage: below it evolution stalls regardless of downstream budget; above it the standard loop resumes.</p>
     <figure>
-      <img src="assets/figures/fig3_expert.png" alt="Best fitness versus generation under three buffers (RND-only, expert-only, RND+hybrid) showing that expert injection rescues Adroit Hand but harms the Humanoid tasks.">
-      <figcaption><b>Figure 3 &mdash; Expert injection rescues or harms depending on the binding constraint.</b> Cumulative best fitness vs. generation under three buffers: RND-only (blue), expert-only (orange), and RND + 100-episode hybrid (red). Adroit Hand uses 100 door-expert episodes; the Humanoid tasks use 100 episodes from converged RND-only FORGE policies. Shaded: std across seeds.</figcaption>
-    </figure>
-
-    <figure style="max-width:520px;margin-left:auto;margin-right:auto;">
-      <img src="assets/figures/fig4_ceiling.png" alt="Capability-ceiling check on Adroit Hand: pretraining on the full 5000-episode door-expert dataset reaches 0.78 at generation 0 and saturates at 0.84, near REvolve's 0.875.">
-      <figcaption><b>Figure 4 &mdash; Capability-ceiling check.</b> The upper bound when expert data is unconstrained: pretraining $\pi_0$ on the full 5000-episode door-expert dataset reaches 0.78 at gen-0 and saturates at 0.84 by gen-1, approaching REvolve's published 0.875.</figcaption>
+      <img src="assets/figures/fig3_buffers.png" alt="Cumulative best fitness versus generation under three pretraining buffers (RND-only, expert-only, RND plus 100 expert episodes): on Adroit Hand the RND-only 30K-episode buffer surpasses both expert-augmented variants; on the Humanoid tasks expert injection harms.">
+      <figcaption><b>Figure 3 &mdash; Unsupervised exploration replaces expert injection.</b> Cumulative best fitness vs. generation under three buffers: RND-only (blue), expert-only (orange), and RND + 100-episode hybrid (red). On Adroit Hand, RND-only (30K episodes, single run) surpasses both expert-augmented variants, converging by generation 1; on Humanoid, expert injection harms by collapsing trajectory diversity. Adroit Hand uses 100 door-expert episodes; Humanoid uses 100 episodes collected from converged RND-only FORGE policies. Shaded: std across seeds.</figcaption>
     </figure>
 
     <h3>Both the skill prior and inheritance are required</h3>
+    <p>Removing the pretrained representation (<em>Inherit only</em>) leaves only checkpoint continuity from the fittest parent, and fitness drifts downward across generations: inherited checkpoints preserve their own state distributions rather than providing reusable structure under new rewards. Removing cross-generation inheritance (<em>Skill prior only</em>) restarts every generation from $\pi_0$: generation 0 is strong, but the population cannot accumulate per-reward fine-tuning gains and plateaus below FORGE. The prior provides the initial repertoire; inheritance converts it into compounding progress.</p>
     <figure>
-      <img src="assets/figures/fig5_ablation.png" alt="Ablation: removing the pretrained feature map (inherit-only) or cross-generation inheritance (skill-prior-only) underperforms the full system on Humanoid tasks; all variants stagnate on Adroit Hand.">
-      <figcaption><b>Figure 5 &mdash; Both the skill prior and cross-generation inheritance are required.</b> Removing pretrained $\phi$ (Inherit only) or cross-generation inheritance (Skill prior only) underperforms the full system on the Humanoid tasks; all variants stagnate on the capability-limited Adroit Hand.</figcaption>
+      <img src="assets/figures/fig4_ablation.png" alt="Ablation with RND-only pretraining: removing the pretrained feature map (inherit only) or cross-generation inheritance (skill prior only) underperforms the full system on all three tasks; on Adroit Hand only the full system lifts off.">
+      <figcaption><b>Figure 4 &mdash; Both the skill prior and cross-generation inheritance are required.</b> RND-only pretraining. Removing pretrained $\phi$ (Inherit only) or cross-generation inheritance (Skill prior only) underperforms the full system on all three tasks; on Adroit Hand only the full system lifts off, while both ablations stagnate.</figcaption>
     </figure>
 
     <h3>No single best reward matches the co-evolved peak</h3>
     <div class="tablewrap">
       <table>
-        <caption>Table 2 &mdash; FORGE co-evolved fitness (top, bold; mean&plusmn;std, 5 seeds) vs. retraining the single best discovered reward at three compute budgets. $\Delta$ from FORGE; negative = worse. No single-reward retraining matches the co-evolved peak.</caption>
+        <caption>Table 1 &mdash; FORGE co-evolved fitness (top, bold; mean&plusmn;std, 5 seeds) vs. retraining the single best discovered reward at three compute budgets. $\Delta$ from FORGE; negative = worse. No single-reward retraining matches the co-evolved peak.</caption>
         <thead>
           <tr>
             <th>Configuration</th><th>Init</th><th class="num">Compute</th>
@@ -322,7 +320,7 @@ window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] 
         <tbody>
           <tr class="highlight">
             <td>FORGE</td><td>Pretrained $\pi_0$</td><td class="num">57M</td>
-            <td class="num">5.1&nbsp;&plusmn;&nbsp;0.3</td><td class="num">0.80&nbsp;&plusmn;&nbsp;0.05</td><td class="num">0.78&nbsp;&plusmn;&nbsp;0.05</td>
+            <td class="num">5.1&nbsp;&plusmn;&nbsp;0.3</td><td class="num">0.80&nbsp;&plusmn;&nbsp;0.05</td><td class="num">0.88</td>
           </tr>
           <tr><td>Best reward</td><td>Pretrained $\pi_0$</td><td class="num">0.5M</td><td class="num">&minus;0.8</td><td class="num">&minus;0.26</td><td class="num">&minus;0.28</td></tr>
           <tr><td>Best reward</td><td>Pretrained $\pi_0$</td><td class="num">3.5M</td><td class="num">&minus;0.5</td><td class="num">&minus;0.20</td><td class="num">&minus;0.23</td></tr>
@@ -331,28 +329,34 @@ window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] 
       </table>
     </div>
     <p class="muted" style="font-size:16px;">The reward that performs best within a lineage does not generalize beyond it: under trajectory-level fitness, a reward is selected because it advances an inherited policy, not because it is the best standalone training signal.</p>
+
+    <h3>The order of rewards matters</h3>
+    <figure>
+      <img src="assets/figures/fig5_replay.png" alt="Reward sequence ablation: replaying the discovered reward sequence in order reproduces the co-evolved reference, while a shuffled order and skipping intermediate rewards both underperform.">
+      <figcaption><b>Figure 5 &mdash; Reward sequence ablation.</b> Forward replay reproduces the co-evolved reference (dashed); shuffle (random permutation) and skip both underperform &mdash; both order and intermediate steps matter. Skip uses three rewards anchored at each task's converged-generation reward. Shaded: std across seeds.</figcaption>
+    </figure>
   </section>
 
   <!-- TAKEAWAYS -->
   <section>
     <h2>Takeaways</h2>
-    <p>FORGE reframes LLM-driven reward search around the upstream&ndash;downstream factorization of modern RL. A one-time task-agnostic skill prior is pretrained on the embodiment alone, and a downstream evolutionary loop projects each LLM-generated reward into the prior's skill space and inherits policy weights across generations. FORGE replaces from-scratch policy training on every reward candidate with closed-form skill projection followed by skill-conditioned fine-tuning &mdash; showing that ordered reward <em>trajectories</em>, not single best rewards, are the load-bearing object of evolutionary reward search.</p>
-    <p class="muted" style="font-size:16px;">Limitations: FORGE assumes a fixed embodiment whose pretrained $\phi$ covers task-relevant states; cross-embodiment transfer is out of scope. Expert injection is task-dependent &mdash; it rescues capability-limited tasks but can degrade tasks where unsupervised pretraining already supplies both capability and diversity. Run-to-run variance is higher than from-scratch evolution because LLM-reward stochasticity compounds with inherited-policy drift across generations.</p>
+    <p>FORGE reframes LLM-driven reward search around the upstream&ndash;downstream factorization of modern RL. A one-time task-agnostic skill prior is pretrained on the embodiment alone, and a downstream evolutionary loop projects each LLM-generated reward into the prior's skill space and inherits policy weights across generations. FORGE replaces from-scratch policy training on every reward candidate with closed-form skill projection followed by skill-conditioned fine-tuning &mdash; showing that ordered reward <em>trajectories</em>, not single best rewards, are the load-bearing object of evolutionary reward search. The same factorization relocates the bottleneck from reward signals to coverage: what the prior can represent is bounded by its pretraining buffer, and coverage bootstrapping writes the policy's frontier back into that buffer so each generation's capability becomes the next generation's coverage.</p>
+    <p class="muted" style="font-size:16px;">Limitations: FORGE assumes a fixed embodiment whose pretrained $\phi$ covers task-relevant states; cross-embodiment transfer is out of scope. The required precursor-state coverage is unknown a priori and collection scales linearly, which is the regime coverage bootstrapping is meant to repair; its closed-loop test on MetaDrive is in progress. Run-to-run variance is higher than from-scratch evolution because LLM-reward stochasticity compounds with inherited-policy drift across generations.</p>
   </section>
 
   <!-- BIBTEX -->
   <section id="bibtex">
     <h2>BibTeX</h2>
     <div class="bibhead">
-      <span class="muted" style="font-family:'Inter',sans-serif;font-size:14px;">Citation (update once de-anonymized)</span>
+      <span class="muted" style="font-family:'Inter',sans-serif;font-size:14px;">Citation</span>
       <button class="copybtn" onclick="copyBib()">Copy</button>
     </div>
-    <pre class="bib" id="bibtext">@inproceedings{forge2026,
-  title     = {FORGE: Fine-Tuning Over Reward Generations through Evolution},
-  author    = {Anonymous Author(s)},
-  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
-  year      = {2026},
-  note      = {Under review}
+    <pre class="bib" id="bibtext">@misc{zhe2026forge,
+  title        = {FORGE: Fine-Tuning Over Reward Generations through Evolution},
+  author       = {Zhe, Linqi},
+  year         = {2026},
+  howpublished = {\url{https://linqizhe07.github.io/forge/}},
+  note         = {Preprint}
 }</pre>
   </section>
 
@@ -360,8 +364,8 @@ window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] 
 
 <footer>
   <div class="wrap">
-    <p>FORGE project page &middot; Submitted to NeurIPS 2026 &middot; Do not distribute.<br>
-    Built for GitHub Pages. Replace the <code>#</code> link placeholders with your arXiv and code URLs.</p>
+    <p>FORGE project page &middot; Linqi Zhe, University of Pennsylvania &middot; 2026<br>
+    <a href="mailto:linqizhe@seas.upenn.edu">linqizhe@seas.upenn.edu</a> &middot; <a href="https://github.com/linqizhe07/zeroshotRevolve">Code</a> &middot; <a href="paper.pdf">Paper</a></p>
   </div>
 </footer>
 
